@@ -5,6 +5,26 @@ from gymnasium.envs.registration import register, register_envs
 
 from rl_zoo3.wrappers import MaskVelocityWrapper
 
+# Custom import from envs folder 
+import sys 
+import os 
+package_path = os.path.join(os.path.dirname(__file__), '../envs')
+sys.path.insert(0, package_path)
+
+# Add custom pid environment
+try:
+    print("Imported force environment")
+
+    register(
+        id='force_env-v0',          # Unique ID for your environment
+        entry_point='force_env:SecondOrderPIDControlEnv',  # Path to your environment
+    )
+
+    env = gym.make('force_env-v0')
+
+except ImportError:
+    print("Force environment unable to be imported")
+
 try:
     import pybullet_envs_gymnasium
 except ImportError:
