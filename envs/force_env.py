@@ -5,7 +5,7 @@ from stable_baselines3.common.env_checker import check_env
 import numpy as np
 import random 
 
-from utils.tcn_feature_extractor import TCNFeatureExtractor
+# from utils.tcn_feature_extractor import TCNFeatureExtractor
 from utils.noise import WhiteNoise
 from utils.low_pass_filter import LowPassFilter
 from utils.compute_poles import compute_optimal_gains, solve_fast_optimization
@@ -182,7 +182,7 @@ class SecondOrderPIDControlEnv(gym.Env):
         # Observation is the error based on the noisy position
         sensed_force = self.Ks_env * self.position + self.white_noise.generate(1)
         error = sensed_force - self.target 
-        error_ratio = min(-1.0, max(error / self.target, 1.0))
+        error_ratio = min(-1.0, max(error / (2 * self.target), 1.0))  # saturate between -1 and 1 for observation; 200% is maximum overshoot normally 
 
         # observation = np.array([sensed_force - self.target], dtype=np.float32)  # not normalized with target force 
         # observation = np.array([(sensed_force - self.target) / self.target], dtype=np.float32)  # normalized with target force 
@@ -211,8 +211,8 @@ class SecondOrderPIDControlEnv(gym.Env):
         # print("Actual stiffness:", self.Ks_env)
         # print("Gains (kp, ki, kv):", self.Kp, self.Ki, self.kv)
         
-        # return observation, reward, done, False, {}
-        return obs_buffer_vec, reward, done, False, {}
+        return observation, reward, done, False, {}
+        # return obs_buffer_vec, reward, done, False, {}
 
     def reset(self, seed=None, options=None):
         # Reset state
