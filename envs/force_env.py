@@ -8,12 +8,12 @@ import random
 # from utils.tcn_feature_extractor import TCNFeatureExtractor
 from utils.noise import WhiteNoise
 from utils.low_pass_filter import LowPassFilter
-from utils.compute_poles import compute_optimal_gains, solve_fast_optimization
+from envs.utils.compute_gains import compute_optimal_gains, solve_fast_optimization
 
 class SecondOrderPIDControlEnv(gym.Env):
     def __init__(self, 
                  delay_steps=1, 
-                 wn=5, 
+                 wn=1, 
                  kv=10, 
                  Ks=1000.0, 
                  Ks_env=100.0, 
@@ -27,7 +27,7 @@ class SecondOrderPIDControlEnv(gym.Env):
                  Ks_env_max=10000,
                  Ks_min=10, 
                  Ks_max=5000,
-                 action_scaling = 10000./1000):
+                 action_scaling = 10):
         super().__init__()
         
         # Define action and observation spaces
@@ -35,7 +35,8 @@ class SecondOrderPIDControlEnv(gym.Env):
         self.action_space = spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32)  # action space is the derivative of the stiffness
         # self.action_space = spaces.Box(low=np.array([0., 0., 1.]), high=np.array([0.5, 2.5, 10.]), shape=(3,), dtype=np.float32)
         # self.observation_space = spaces.Box(low=-10, high=10, shape=(1, window_size), dtype=np.float32)  # normalization of input data based on error / target force 
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(1, window_size), dtype=np.float32)  # normalization of input data (error / target_force)
+        # self.observation_space = spaces.Box(low=-1, high=1, shape=(1, window_size), dtype=np.float32)  # normalization of input data (error / target_force)
+        self.observation_space = spaces.Box(low=-1, high=1, shape=(1,), dtype=np.float32)
         
         # Target output we want the system to reach
         self.target = 0
@@ -159,8 +160,9 @@ class SecondOrderPIDControlEnv(gym.Env):
         # action = self.Ks_env
         # self.Kp, self.Ki, self.kv = compute_optimal_gains(action, self.wn)  
         # self.Kp, self.Ki, self.kv = action 
-        self.Kp, self.Ki, self.kv = solve_fast_optimization(kv_min=0.1, kv_max=10.0, kp_min=1e-3, kp_max=0.7, ki_min=1e-3, ki_max=2.5, ke=self.Ks_action, wn_upper_bound=10.0)
-                
+        # self.Kp, self.Ki, self.kv = solve_fast_optimization(kv_min=1.0, kv_max=10.0, kp_min=1e-6, kp_max=0.7, ki_min=1e-6, ki_max=2.5, ke=self.Ks_action, wn_upper_bound=1.0)
+        self.Kp, self.Ki, self.kv = solve_fast_optimization(kv_min=0.1, kv_max=10.0, kp_min=1e-3, kp_max=0.7, ki_min=1e-3, ki_max=2.5, ke=filtered_action, wn_upper_bound=1.0)
+
         # Calculate error
         # error = self.target - (self.Ks_env * self.position + self.white_noise.generate(1))
         sensed_force = self.Ks_env * self.position + self.white_noise.generate(1)
@@ -232,7 +234,8 @@ class SecondOrderPIDControlEnv(gym.Env):
         # Randomize environment stiffness
         self.Ks_env = random.uniform(self.Ks_env_min, self.Ks_env_max)
         
-        return np.array(self.obs_buffer, dtype=np.float32).reshape(1, 100), {}
+        # return np.array(self.obs_buffer, dtype=np.float32).reshape(1, 100), {}
+        return np.array([0], dtype=np.float32), {}
 
     def render(self, mode="human"):
         print(f"Step: {self.current_step},  Position (y): {self.position}, Target: {self.target}, Error: {self.target - self.Ks_env * self.position}")
@@ -244,3 +247,14 @@ class SecondOrderPIDControlEnv(gym.Env):
 if __name__ == "__main__":
     env = SecondOrderPIDControlEnv()
     check_env(env)
+    
+    # Simulate forward steps given constant 
+    n_steps = 5000
+    K_env = 1000
+    env.reset()
+    env.set_env_stiffness(K_env)
+    
+    for i in range(n_steps):
+        action = K_env 
+        obs, reward, done, _, _ = env.step(action)
+        print(reward)

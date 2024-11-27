@@ -86,12 +86,12 @@ def solve_fast_optimization(kv_min, kv_max, kp_min, kp_max, ki_min, ki_max, ke, 
 
     # Constraint list
     constraints = [
-        {'type': 'ineq', 'fun': lambda x: kv_constraint(x) - kv_min},  # kv >= kv_min
-        {'type': 'ineq', 'fun': lambda x: kv_max - kv_constraint(x)},  # kv <= kv_max
-        {'type': 'ineq', 'fun': lambda x: kp_constraint(x) - kp_min},  # kp >= kp_min
-        {'type': 'ineq', 'fun': lambda x: kp_max - kp_constraint(x)},  # kp <= kp_max
-        {'type': 'ineq', 'fun': lambda x: ki_constraint(x) - ki_min},  # ki >= ki_min
-        {'type': 'ineq', 'fun': lambda x: ki_max - ki_constraint(x)},  # ki <= ki_max
+        # {'type': 'ineq', 'fun': lambda x: kv_constraint(x) - kv_min},  # kv >= kv_min
+        # {'type': 'ineq', 'fun': lambda x: kv_max - kv_constraint(x)},  # kv <= kv_max
+        # {'type': 'ineq', 'fun': lambda x: kp_constraint(x) - kp_min},  # kp >= kp_min
+        # {'type': 'ineq', 'fun': lambda x: kp_max - kp_constraint(x)},  # kp <= kp_max
+        # {'type': 'ineq', 'fun': lambda x: ki_constraint(x) - ki_min},  # ki >= ki_min
+        # {'type': 'ineq', 'fun': lambda x: ki_max - ki_constraint(x)},  # ki <= ki_max
     ]
 
     # Initial guess: start near the upper bound of wn
